@@ -28,7 +28,7 @@ const (
 //go:generate stringer -type KeyType
 
 type KeyGen struct {
-	rng io.Reader
+	Rng io.Reader
 }
 
 type PasswordSpec struct {
@@ -127,7 +127,7 @@ func (keygen *KeyGen) genRandStr(length int) (string, error) {
 	bytes := make([]byte, length)
 
 	for i := 0; i < length; i++ {
-		pos, err := randRange(keygen.rng, byte(len(chars)))
+		pos, err := randRange(keygen.Rng, byte(len(chars)))
 		if err != nil {
 			return "", err
 		}
@@ -167,7 +167,7 @@ func (keygen *KeyGen) generateRsa(kt KeyType) (crypto.PrivateKey, error) {
 		return nil, errors.New("invalid RSA key size requested")
 	}
 
-	return deterministicRsaKeygen.GenerateKey(keygen.rng, bits)
+	return deterministicRsaKeygen.GenerateKey(keygen.Rng, bits)
 }
 
 func (keygen *KeyGen) generateEc(kt KeyType) (crypto.PrivateKey, error) {
@@ -184,14 +184,14 @@ func (keygen *KeyGen) generateEc(kt KeyType) (crypto.PrivateKey, error) {
 		return nil, errors.New("invalid EC key size requested")
 	}
 
-	return deterministicEcdsaKeygen.GenerateKey(curve, keygen.rng)
+	return deterministicEcdsaKeygen.GenerateKey(curve, keygen.Rng)
 }
 
 func (keygen *KeyGen) generate25519(kt KeyType) (crypto.PrivateKey, error) {
 	switch kt {
 	case X25519:
 		var privKey [32]byte
-		_, err := io.ReadFull(keygen.rng, privKey[:])
+		_, err := io.ReadFull(keygen.Rng, privKey[:])
 
 		// from https://cr.yp.to/ecdh.html
 		privKey[0] &= 248
@@ -200,7 +200,7 @@ func (keygen *KeyGen) generate25519(kt KeyType) (crypto.PrivateKey, error) {
 
 		return x25519PrivateKey(privKey[:]), err
 	case ED25519:
-		_, privKey, err := ed25519.GenerateKey(keygen.rng)
+		_, privKey, err := ed25519.GenerateKey(keygen.Rng)
 		return &privKey, err
 	}
 
